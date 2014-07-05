@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8"><!-- TODO: Add apple icon when on phone homescreen logo whatever it's called -->
+        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+        <title>Shoppinglist - Debug</title>
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1.0">
+
+        <link rel="stylesheet" href="css/bootstrap.min.css">
+        <link rel="stylesheet" href="css/bootstrap-theme.min.css">
+        <link rel="stylesheet" href="css/main.css">
+    </head>
+    <body ng-app="DebugApp" ng-controller="DebugController">
+    <div class="container" style="font-size:large">
+        <div class="row top-buffer">
+            <pre ng-show="rawData">localStorage.shoppinglist_items_v1 = {{rawData | json }}</pre>
+            <pre ng-show="readError">Error reading localStorage.shoppinglist_items_v1: '{{readError}}'</pre>
+            <pre ng-show="!readError && !rawData">There is no local data stored</pre>
+            <button ng-click="wipe()" class="btn btn-danger" ng-show="readError">Wipe localstorage</button>
+            <pre ng-show="shoppinglist_lasterrormessage_v1">
+                Last error: {{shoppinglist_lasterrormessage_v1}
+            </pre>
+        </div>
+    </div>
+        <script src="js/vendor/jquery-1.11.0.min.js"></script>
+        <script>
+            window.scrollTo = function() {}; //Angular calls this for basiclly no good reason causing errors with popup blockers (at least in chrome. havent tested other browsers)
+        </script>
+        <script src="js/vendor/angular.min.js"></script>
+        <script>
+            debugApp = angular
+                .module('DebugApp', [])
+                .controller('DebugController', function ($scope) {
+                    function loadLocalStorage() {
+                        try {
+                            var d = localStorage.shoppinglist_items_v1;
+                            if(d) {
+                                 var r = JSON.parse(d);
+                                $scope.rawData = r;
+                                $scope.readError = null;
+                            } else {
+                                $scope.rawData = null;
+                                $scope.readError = null;
+                            }
+                        }
+                        catch(err) {
+                            $scope.readError = err.message;
+                            $scope.rawData = null;
+                        }
+                    }
+                    loadLocalStorage();
+                    $scope.wipe = function () {
+                        localStorage.shoppinglist_items_v1 = null;
+                        loadLocalStorage();
+                    }
+
+                    if(localStorage.shoppinglist_lasterrormessage_v1) {
+                        $scope.shoppinglist_lasterrormessage_v1 = localStorage.shoppinglist_lasterrormessage_v1;
+                    }
+                });
+        </script>
+    </body>
+</html>

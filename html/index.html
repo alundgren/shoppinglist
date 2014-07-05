@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+        <link rel="apple-touch-icon" href="img/apple-touch-icon.png">
+        <title>Shoppinglist</title>
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1.0">
+
+        <link rel="stylesheet" href="css/bootstrap.min.css">
+        <link rel="stylesheet" href="css/bootstrap-theme.min.css">
+        <link rel="stylesheet" href="css/main.css">
+    </head>
+    <body ng-app="ShoppingListApp" ng-controller="ShoppingListController" style="height:100vh;">
+    <div class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+      <div class="container">
+        <div class="navbar-header">
+          <a class="navbar-brand" href="/">Shoppinglist</a>
+            <!-- TODO: add manifest offline cache work without internet thing -->
+        </div>
+      </div>
+    </div>
+    <div class="remove-container" ng-show="hasDoneItems()"> <!-- TODO: Make this less annoying on a big screen -->
+        <button class="btn btn-danger" ng-click="removeDoneItems()"><span class="glyphicon glyphicon-trash"></span></button>
+    </div>
+    <div class="container" style="font-size:large">
+        <div class="row top-buffer">
+            <form class="form" role="form">
+                <div class="input-group">
+                    <input class="form-control" placeholder="Text goes here..." type="text" ng-model="newItem"></input>
+                    <span class="input-group-btn">
+                        <button type="submit" class="btn btn-success" ng-click="addItem(newItem)"><span class="glyphicon glyphicon-plus"></span></button>
+                    </span>
+                </div>
+            </form>
+        </div>
+        <div class="row top-buffer">
+            <table class="table table-striped">
+                <tr ng-repeat="item in items" ng-class="{done:item.done}" ng-click="item.done=!item.done">
+                    <td>
+                       {{item.text}}
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </div>
+        <script src="js/vendor/jquery-1.11.0.min.js"></script>
+        <script src="js/vendor/fastclick.js"></script>
+        <script>
+            window.scrollTo = function() {}; //Angular calls this for basiclly no good reason causing errors with popup blockers (at least in chrome. havent tested other browsers)
+            $(function() {
+                FastClick.attach(document.body);
+            });
+        </script>
+        <script src="js/vendor/angular.min.js"></script>
+        <script src="js/main.js"></script>
+    </body>
+</html>
