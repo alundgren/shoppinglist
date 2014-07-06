@@ -13,6 +13,7 @@
     </head>
     <body ng-app="DebugApp" ng-controller="DebugController">
     <div class="container" style="font-size:large">
+        <h3>Debug</h3>
         <div class="row top-buffer">
             <pre ng-show="rawData">localStorage.shoppinglist_items_v1 = {{rawData | json }}</pre>
             <pre ng-show="readError">Error reading localStorage.shoppinglist_items_v1: '{{readError}}'</pre>
