@@ -23,3 +23,10 @@ tr.done td {
     opacity:0.4;
     text-decoration:line-through;
 }
+
+/*Restyle bootstrap dropdown a bit*/
+.dropdown-menu {
+    position: relative;
+    float:inherit;
+    display: block;
+}
