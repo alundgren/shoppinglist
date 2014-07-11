@@ -65,11 +65,15 @@ main = (function () {
         .module('ShoppingListApp', [])
         .factory('isDevelopment', function () { return document && document.URL.lastIndexOf('http://localhost', 0) === 0; })
         .controller('ShoppingListController', function ($scope, isDevelopment) {
-            var history, historySaved;
+            var history, historySaved, historyCfg;
 
             $scope.items = storage.load('shoppinglist_items_v1',  []);
 
-            history = new ItemHistory({ debug : function (x) { console.log(x); }});
+            historyCfg = {};
+            if (isDevelopment) {
+                historyCfg.debug = function (x) { console.log(x); };
+            }
+            history = new ItemHistory(historyCfg);
             historySaved = storage.loadRaw('shoppinglist_history_v1',  null);
             if (historySaved) {
                 history.fromJson(historySaved);
