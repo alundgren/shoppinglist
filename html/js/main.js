@@ -63,7 +63,7 @@ main = (function () {
 
     app = angular
         .module('ShoppingListApp', [])
-        .factory('isDevelopment', function () { return document && document.URL.lastIndexOf('http://localhost', 0) === 0; })
+        .factory('isDevelopment', function () { return localStorage && localStorage.shoppinglist_environment_v1 && localStorage.shoppinglist_environment_v1 === 'development'; })
         .controller('ShoppingListController', function ($scope, isDevelopment) {
             var history, historySaved, historyCfg;
 

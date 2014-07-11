@@ -13,16 +13,8 @@
     </head>
     <body ng-app="DebugApp" ng-controller="DebugController">
     <div class="container" style="font-size:large">
-        <h3>Debug</h3>
-        <div class="row top-buffer">
-            <pre ng-show="rawData">localStorage.shoppinglist_items_v1 = {{rawData | json }}</pre>
-            <pre ng-show="readError">Error reading localStorage.shoppinglist_items_v1: '{{readError}}'</pre>
-            <pre ng-show="!readError && !rawData">There is no local data stored</pre>
-            <button ng-click="wipe()" class="btn btn-danger" ng-show="readError">Wipe localstorage</button>
-            <pre ng-show="shoppinglist_lasterrormessage_v1">
-                Last error: {{shoppinglist_lasterrormessage_v1}
-            </pre>
-        </div>
+        <h3>Enviroment</h3>
+        <button ng-click="isDevelopment=!isDevelopment">Current:{{getEnviromentName()}}</button>
     </div>
         <script src="js/vendor/jquery-1.11.0.min.js"></script>
         <script>
@@ -33,32 +25,21 @@
             debugApp = angular
                 .module('DebugApp', [])
                 .controller('DebugController', function ($scope) {
-                    function loadLocalStorage() {
-                        try {
-                            var d = localStorage.shoppinglist_items_v1;
-                            if(d) {
-                                 var r = JSON.parse(d);
-                                $scope.rawData = r;
-                                $scope.readError = null;
-                            } else {
-                                $scope.rawData = null;
-                                $scope.readError = null;
-                            }
+                    $scope.isDevelopment = localStorage && localStorage.shoppinglist_environment_v1 && localStorage.shoppinglist_environment_v1 === 'development';
+                    $scope.getEnviromentName = function () {
+                        if($scope.isDevelopment) {
+                            return 'Development';
+                        } else {
+                            return 'Normal user';
                         }
-                        catch(err) {
-                            $scope.readError = err.message;
-                            $scope.rawData = null;
+                    };
+                    $scope.$watch('isDevelopment', function () {
+                        if($scope.isDevelopment === true) {
+                            localStorage.shoppinglist_environment_v1 = 'development';
+                        } else if ($scope.isDevelopment === false) {
+                            localStorage.shoppinglist_environment_v1 = undefined;
                         }
-                    }
-                    loadLocalStorage();
-                    $scope.wipe = function () {
-                        localStorage.shoppinglist_items_v1 = null;
-                        loadLocalStorage();
-                    }
-
-                    if(localStorage.shoppinglist_lasterrormessage_v1) {
-                        $scope.shoppinglist_lasterrormessage_v1 = localStorage.shoppinglist_lasterrormessage_v1;
-                    }
+                    });
                 });
         </script>
     </body>
