@@ -1,3 +1,4 @@
+@@ -0,0 +1,76 @@
 <!DOCTYPE html>
 <html>
     <head>
@@ -15,6 +16,23 @@
     <div class="container" style="font-size:large">
         <h3>Enviroment</h3>
         <button ng-click="isDevelopment=!isDevelopment">Current:{{getEnviromentName()}}</button>
+        <h3>Autocomplete items</h3>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>name</th>
+                    <th>lastAdded</th>
+                    <th>doneCount</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr ng-repeat="item in historyItems">
+                    <td>{{item.name}}</td>
+                    <td>{{getDate(item.lastAdded)}}</td>
+                    <td>{{item.doneCount}}</td>
+                </tr>
+            </tbody>
+        </table>
     </div>
         <script src="js/vendor/jquery-1.11.0.min.js"></script>
         <script>
@@ -25,6 +43,9 @@
             debugApp = angular
                 .module('DebugApp', [])
                 .controller('DebugController', function ($scope) {
+                    //--------------------------------
+                    //---- Environment ---------------
+                    //--------------------------------
                     $scope.isDevelopment = localStorage && localStorage.shoppinglist_environment_v1 && localStorage.shoppinglist_environment_v1 === 'development';
                     $scope.getEnviromentName = function () {
                         if($scope.isDevelopment) {
@@ -40,6 +61,16 @@
                             localStorage.shoppinglist_environment_v1 = undefined;
                         }
                     });
+                    //--------------------------------
+                    //---- Autocomplete --------------
+                    //--------------------------------
+                    if(localStorage && localStorage.shoppinglist_history_v1) {
+                        var h = JSON.parse(localStorage.shoppinglist_history_v1);
+                        $scope.historyItems = h.items;
+                        $scope.getDate = function (x) {
+                            return new Date(x);
+                        };
+                    }
                 });
         </script>
     </body>
