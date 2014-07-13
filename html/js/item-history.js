@@ -7,11 +7,14 @@ function ItemHistory(options) {
     var data, debug;
 
     data = {
-        items : [],
-        mistakeGracePeriodInMilliseconds :  1000 * 60 * 10 //A known item flagged as done. Provided more than 10 minutes have elapsed (to avoid adding spelling errors and other things that are quickly removed) we add it.
+        items : []
     };
 
-    debug = options.debug || function (msg) {};
+    if(options && options.debug) {
+        debug = options.debug;
+    } else {
+        debug =  function (msg) {};
+    }
 
     function logEvent(eventName, itemName, date) {
         debug('logEvent(' + eventName + ', ' + itemName + ', ' + date + ')');
@@ -23,20 +26,26 @@ function ItemHistory(options) {
 
         item = _.find(data.items, function (x) { return x.name === itemName; });
 
-        if (item) {
-            //Already seen before
-            if (eventName === 'd' && d - item.lastAdded >= data.mistakeGracePeriodInMilliseconds) {
+        if (!item) {
+            item = { name : itemName, autoCompleteCount : 0, activityCount : 0 };
+            data.items.push(item);
+        }
 
-                item.lastDone = d;
-                if (item.doneCount) {
-                    item.doneCount = item.doneCount + 1;
-                } else {
-                    item.doneCount = 1;
-                }
-            }
-        } else if (eventName === 'a') {
-            //New item is added. Other events happening if the item doesnt exists make no sense so we just ignore those.
-            data.items.push({ name : itemName, lastAdded : d });
+        if (eventName === 'r') {
+            item.lastRemoved = d;
+            item.activityCount = item.activityCount + 1;
+        }
+        if (eventName === 'a') {
+            item.lastAdded = d;
+            item.activityCount = item.activityCount + 1;
+        }
+        if (eventName === 'd') {
+            item.lastDone = d;
+            item.activityCount = item.activityCount + 1;
+        }
+        if (eventName === 'c') {
+            item.lastAutocomplete = d;
+            item.autoCompleteCount = item.autoCompleteCount + 1;
         }
     }
 
@@ -48,11 +57,7 @@ function ItemHistory(options) {
         return JSON.stringify(data);
     };
 
-    this.setMistakeGracePeriodInMilliseconds = function (ms) {
-        data.mistakeGracePeriodInMilliseconds = ms;
-    };
-
-    this.search = function (namePrefix) { //TODO: Also filter out any items currenty in the list
+    this.search = function (namePrefix, currentItems) { //TODO: Also filter out any items currenty in the list
         //prefixes shorter than 2 chars seems like it will give a bit random results. May even need 3.
         if (!namePrefix || namePrefix.length < 2) {
             return [];
@@ -62,9 +67,10 @@ function ItemHistory(options) {
 
         p = namePrefix.toLowerCase();
         hits = _.chain(data.items)
-            .filter(function (x) { return x.doneCount && x.name.toLowerCase().lastIndexOf(p, 0) === 0; })
-            .sortBy(function (x) { return -x.lastAdded; }) //Sort by this second. If habits change, new items will eventually win out over old items.
-            .sortBy(function (x) { return -(x.doneCount || 0); }) //Sort by this first. Items marked done often are preferred.
+            .filter(function (x) { return x.name.toLowerCase().lastIndexOf(p, 0) === 0; })
+            .filter(function (x) { return !currentItems || !_(currentItems).find(function (y) { return x.name.toLowerCase() === y.toLowerCase(); }); })
+            .sortBy(function (x) { return -x.activityCount; }) //Sort by this second.
+            .sortBy(function (x) { return -x.autoCompleteCount; }) //Sort by this first.
             .pluck('name')
             .value();
         if (hits.length > 3) {
@@ -74,13 +80,16 @@ function ItemHistory(options) {
         }
     };
 
-    this.logItemAdded = function (name, date) {
+    this.logItemAdded = function (name, date) { //added to shoppinglist
         logEvent('a', name, date);
     };
-    this.logItemMarkedDone = function (name, date) {
+    this.logItemMarkedDone = function (name, date) { //marked done on shoppinglist
         logEvent('d', name, date);
     };
-    this.logItemRemoved = function (name, date) {
+    this.logItemRemoved = function (name, date) { //removed from shoppinglist
         logEvent('r', name, date);
     };
+    this.logItemAutocompleted = function (name, date) { //accepted as autocomplete option
+        logEvent('c', name, date);
+    }
 }

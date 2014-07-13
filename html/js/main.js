@@ -74,13 +74,9 @@ main = (function () {
                 historyCfg.debug = function (x) { console.log(x); };
             }
             history = new ItemHistory(historyCfg);
-            historySaved = storage.loadRaw('shoppinglist_history_v1',  null);
+            historySaved = storage.loadRaw('shoppinglist_history_v2',  null);
             if (historySaved) {
                 history.fromJson(historySaved);
-            }
-            if (isDevelopment) {
-                //To make it easier to test autocomplete we include even items added and removed right after one another to be included.
-                history.setMistakeGracePeriodInMilliseconds(1);
             }
 
             $scope.removeDoneItems = function () {
@@ -90,7 +86,7 @@ main = (function () {
                         newItems.push(item);
                     } else {
                         history.logItemRemoved(item.text, new Date());
-                        storage.saveRaw('shoppinglist_history_v1', history.toJson()); //TODO: Make the history emit events whenever it changes so we can do this once
+                        storage.saveRaw('shoppinglist_history_v2', history.toJson()); //TODO: Make the history emit events whenever it changes so we can do this once
                     }
                 });
                 $scope.items = newItems;
@@ -101,7 +97,7 @@ main = (function () {
                     $scope.items.unshift({ text : itemText });
                     $scope.newItem = '';
                     history.logItemAdded(itemText, new Date());
-                    storage.saveRaw('shoppinglist_history_v1', history.toJson()); //TODO: Make the history emit events whenever it changes so we can do this once
+                    storage.saveRaw('shoppinglist_history_v2', history.toJson()); //TODO: Make the history emit events whenever it changes so we can do this once
                 }
             };
 
@@ -109,7 +105,7 @@ main = (function () {
                 if (item) {
                     if (!item.done) {
                         history.logItemMarkedDone(item.text, new Date());
-                        storage.saveRaw('shoppinglist_history_v1', history.toJson()); //TODO: Make the history emit events whenever it changes so we can do this once
+                        storage.saveRaw('shoppinglist_history_v2', history.toJson()); //TODO: Make the history emit events whenever it changes so we can do this once
                     }
                     item.done = !item.done;
                 }
@@ -126,6 +122,8 @@ main = (function () {
             };
 
             $scope.searchhitSelected = function (itemText) {
+                history.logItemAutocompleted(itemText, new Date());
+                storage.saveRaw('shoppinglist_history_v2', history.toJson()); //TODO: Make the history emit events whenever it changes so we can do this once
                 $scope.addItem(itemText);
             };
 
@@ -135,7 +133,7 @@ main = (function () {
 
             $scope.$watch('newItem', function () {
                 if ($scope.newItem && $scope.newItem.length >= 2) {
-                    var hitsModel = _.map(history.search($scope.newItem), function (x) {
+                    var hitsModel = _.map(history.search($scope.newItem, _($scope.items).pluck('text')), function (x) {
                         return {
                             matchedPrefixText : x.substring(0, $scope.newItem.length),
                             remainingText : x.substring($scope.newItem.length, x.length),

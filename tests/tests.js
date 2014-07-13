@@ -24,97 +24,56 @@
             f();
         }
     }
+    var baseDate = new Date('2011-07-13T12:30:00');
 
-    QUnit.test('item added and then marked as done 1 mins later is not found when typing in at least the first two letters', function (assert) {
+    QUnit.test('item added can be found later by autocomplete', function (assert) {
         var h, r;
 
         h = new ItemHistory();
-        h.logItemAdded('Gul lök', new Date('2011-07-13T12:30:00'));
-        h.logItemMarkedDone('Gul lök', new Date('2011-07-13T12:31:00'));
-
-        r = h.search('Gu');
-
-        assert.deepEqual(r, []);
-    });
-
-    QUnit.test('item added and then marked as done 10 mins later is found when typing in at least the first two letters', function (assert) {
-        var h, r;
-
-        h = new ItemHistory();
-        h.logItemAdded('Gul lök', new Date('2011-07-13T12:30:00'));
-        h.logItemMarkedDone('Gul lök', new Date('2011-07-13T13:30:00'));
+        h.logItemAdded('Gul lök', baseDate);
 
         r = h.search('Gu');
 
         assert.deepEqual(r, ['Gul lök']);
     });
 
-    QUnit.test('more recently added items are preferred all other things equal', function (assert) {
-        var h, baseDate, r;
+    QUnit.test('item added is not found by autocomplete if already present', function (assert) {
+        //NOTE: This could be inferred by the item not having been removed after the last add but it feels risky since they may get out of synch for various reasons.
+        var h, r;
 
         h = new ItemHistory();
-        baseDate = new Date('2011-07-13T12:30:00');
+        h.logItemAdded('Gul lök', baseDate);
 
-        addItemAndMarkDoneInXHours(h, 'Gul1', 1, addHours(baseDate, 1));
-        addItemAndMarkDoneInXHours(h, 'Gul2', 1, addHours(baseDate, 2));
-        addItemAndMarkDoneInXHours(h, 'Gul3', 1, addHours(baseDate, 3));
-        addItemAndMarkDoneInXHours(h, 'Gul4', 1, addHours(baseDate, 4));
-        addItemAndMarkDoneInXHours(h, 'Gul5', 1, addHours(baseDate, 5));
-        addItemAndMarkDoneInXHours(h, 'Gul6', 1, addHours(baseDate, 6));
+        r = h.search('Gu', ['Gul lök']);
 
-        r = h.search('Gu');
-
-        assert.deepEqual(r, ['Gul6', 'Gul5', 'Gul4']);
+        assert.deepEqual(r, []);
     });
 
-    QUnit.test('items marked as done more times are preferred all other things equal', function (assert) {
-        var h, baseDate, r;
-
-        h = new ItemHistory();
-        baseDate = new Date('2011-07-13T12:30:00');
-
-        repeat(function () { addItemAndMarkDoneInXHours(h, 'Gul1', 1, baseDate); }, 1);
-        repeat(function () { addItemAndMarkDoneInXHours(h, 'Gul2', 1, baseDate); }, 2);
-        repeat(function () { addItemAndMarkDoneInXHours(h, 'Gul3', 1, baseDate); }, 3);
-        repeat(function () { addItemAndMarkDoneInXHours(h, 'Gul4', 1, baseDate); }, 4);
-        repeat(function () { addItemAndMarkDoneInXHours(h, 'Gul5', 1, baseDate); }, 5);
-        repeat(function () { addItemAndMarkDoneInXHours(h, 'Gul6', 1, baseDate); }, 6);
-        r = h.search('Gu');
-
-        assert.deepEqual(r, ['Gul6', 'Gul5', 'Gul4']);
-    });
-
-    QUnit.test('search is not case sensetive', function (assert) {
-        var h, actualItemName;
-
-        h = new ItemHistory();
-
-        actualItemName = 'åÄöAbcDeFGh';
-        addItemAndMarkDoneInXHours(h, actualItemName, 1);
-
-        assert.deepEqual(h.search(actualItemName.toLowerCase()), [actualItemName]);
-        assert.deepEqual(h.search(actualItemName.toUpperCase()), [actualItemName]);
-        assert.deepEqual(h.search(actualItemName), [actualItemName]);
-    });
-
-    QUnit.test('serialization preserves items and graceperiod', function (assert) {
+    QUnit.test('serialization preserves items', function (assert) {
         var h1, h2, oneHour;
 
-        oneHour = 60 * 60 * 1000;
         h1 = new ItemHistory();
-        h1.setMistakeGracePeriodInMilliseconds(5 * oneHour);
-        addItemAndMarkDoneInXHours(h1, 'A1', 3);
-        addItemAndMarkDoneInXHours(h1, 'A2', 6);
+        addItemAndMarkDoneInXHours(h1, 'A1');
 
         h2 = new ItemHistory();
         h2.fromJson(h1.toJson());
-        addItemAndMarkDoneInXHours(h2, 'B1', 3);
-        addItemAndMarkDoneInXHours(h2, 'B2', 6);
 
-        assert.deepEqual(h2.search('A1'), [], 'young item from original history is not found');
-        assert.deepEqual(h2.search('A2'), ['A2'], 'old item from original history is found');
-        assert.deepEqual(h2.search('B1'), [], 'young item from restored history is not found');
-        assert.deepEqual(h2.search('B2'), ['B2'], 'old item from restored history is found');
+        assert.deepEqual(h2.search('A1'), ['A1'], 'item from original history is found');
+    });
+
+    QUnit.test('items marked as done more times are preferred all other things equal', function (assert) {
+        var h, r;
+        h = new ItemHistory();
+
+        repeat(function () { addItemAndMarkDoneInXHours(h, 'Gul1'); }, 1);
+        repeat(function () { addItemAndMarkDoneInXHours(h, 'Gul2'); }, 2);
+        repeat(function () { addItemAndMarkDoneInXHours(h, 'Gul3'); }, 3);
+        repeat(function () { addItemAndMarkDoneInXHours(h, 'Gul4'); }, 4);
+        repeat(function () { addItemAndMarkDoneInXHours(h, 'Gul5'); }, 5);
+        repeat(function () { addItemAndMarkDoneInXHours(h, 'Gul6'); }, 6);
+        r = h.search('Gu');
+
+        assert.deepEqual(r, ['Gul6', 'Gul5', 'Gul4']);
     });
 }());
 
